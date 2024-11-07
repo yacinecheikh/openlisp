@@ -113,14 +113,59 @@ def tokenize(source: List[Char]) -> List[Token]:
     return tokens
 
 
-with open("source/source_map.lisp", "r") as f:
-    source = f.read()
-    tokens = tokenize(source_map(source))
+#with open("source/source_map.lisp", "r") as f:
+#    source = f.read()
+#    tokens = tokenize(source_map(source))
+#    print(tokens)
+
+from value.symbol import symbol
+from value.integer import integer
+from value.string import string
+
+# recursive descent
+def read_expr(tokens: List[Token]):
+    if not tokens:
+        return None
+
+    token = tokens.pop()
+
+    if token.type == "symbol":
+        s = symbol(token.value)
+        s.start_position = token.start_position
+        s.start_line = token.start_line
+        s.end_position = token.end_position
+        s.end_line = token.end_line
+        return s
+    elif token.type == "number":
+        n = integer(int(token.value))
+        n.start_position = token.start_position
+        n.start_line = token.start_line
+        n.end_position = token.end_position
+        n.end_line = token.end_line
+        return n
+    elif token.type == "string":
+        s = string(token.value)
+        s.start_position = token.start_position
+        s.start_line = token.start_line
+        s.end_position = token.end_position
+        s.end_line = token.end_line
+        return s
+    #if token.type == "syntax" and token.value == "(":
+    else:
+        raise Exception("Unknown token type")
+
+
+
+from native_builtins import to_string
+
+with open("source/read.lisp") as f:
+    chars = source_map(f.read())
+    tokens = tokenize(chars)
     print(tokens)
-                
-
-
-
+    tokens.reverse()
+    while tokens:
+        expr = read_expr(tokens)
+        print(to_string(expr))
 
 
 # tokenizer
