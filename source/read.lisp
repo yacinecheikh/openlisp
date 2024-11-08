@@ -8,4 +8,6 @@
 
 variable
 
+(print "hello world")
+
 

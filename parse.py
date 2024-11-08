@@ -121,6 +121,8 @@ def tokenize(source: List[Char]) -> List[Token]:
 from value.symbol import symbol
 from value.integer import integer
 from value.string import string
+from value.unique import nil
+from value.cell import cons, car, cdr, reverse
 
 # recursive descent
 def read_expr(tokens: List[Token]):
@@ -150,13 +152,34 @@ def read_expr(tokens: List[Token]):
         s.end_position = token.end_position
         s.end_line = token.end_line
         return s
-    #if token.type == "syntax" and token.value == "(":
+    elif token.type == "syntax" and token.value == "(":
+        start_position = token.start_position
+        start_line = token.start_line
+        sub_exprs = nil
+        while True:
+            if len(tokens) == 0:
+                raise Exception(f"Unexpected end of file while parsing s-expression at {start_line}:{start_position}")
+            token = tokens[-1]
+            if token.type == "syntax" and token.value == ")":
+                end_position = token.end_position
+                end_line = token.end_line
+                # end of list
+                tokens.pop()
+                result = reverse(sub_exprs)
+                result.start_position = start_position
+                result.start_line = start_line
+                result.end_position = end_position
+                result.end_line = end_line
+                return result
+            else:
+                expr = read_expr(tokens)
+                sub_exprs = cons(expr, sub_exprs)
     else:
         raise Exception("Unknown token type")
 
 
 
-from native_builtins import to_string
+from native_builtins import to_string, represent, inspect
 
 with open("source/read.lisp") as f:
     chars = source_map(f.read())
@@ -165,7 +188,7 @@ with open("source/read.lisp") as f:
     tokens.reverse()
     while tokens:
         expr = read_expr(tokens)
-        print(to_string(expr))
+        print(inspect(expr).value)
 
 
 # tokenizer

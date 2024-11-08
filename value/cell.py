@@ -1,5 +1,6 @@
 from .types import cell_type
 from .value import Value
+from .unique import nil
 
 def cons(car, cdr):
     return Value(type=cell_type, value=(car, cdr))
@@ -16,4 +17,12 @@ def car(cell):
 def cdr(cell):
     assert cell.type == cell_type
     return cell.value[1]
+
+def reverse(cell):
+    result = nil
+    while cell != nil:
+        expr = car(cell)
+        cell = cdr(cell)
+        result = cons(expr, result)
+    return result
 
