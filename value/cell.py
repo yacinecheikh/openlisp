@@ -32,3 +32,13 @@ def make_list(*args):
     for x in args:
         result = cons(x, result)
     return reverse(result)
+
+def map_list(cell, f):
+    reversed = reverse(cell)
+    result = nil
+    while reversed is not nil:
+        head = car(reversed)
+        result = cons(f(head), result)
+        reversed = cdr(reversed)
+    return result
+

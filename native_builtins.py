@@ -4,7 +4,42 @@ from value.unique import nil
 from value.cell import car, cdr
 
 
-# (to-string)
+from value import hashtable, unique, function
+
+
+def environment(parent=unique.nil):
+    bindings = {
+        "parent-scope": parent,
+    }
+    lisp_value = hashtable.hashtable(bindings)
+    bindings["current-scope"] = lisp_value
+    return lisp_value
+
+
+global_environment = environment()
+
+
+def define_global(name, func, exec_mode=function.after_eval):
+    bindings = global_environment.value
+    wrapped_func = function.native_function(func, exec_mode)
+    bindings["name"] = wrapped_func
+    return func
+
+
+def builtin(name, exec_mode=function.after_eval):
+    def decorator(func):
+        return define_global(name, func, exec_mode)
+    return decorator
+
+
+#define_global("to-string", to_string)
+
+
+#@builtin("+")
+#def add(*args):
+#    pass
+
+@builtin("to-string")
 def to_string(x: Value):
     if x.type == int_type:
         return Value(str_type, str(x.value))
@@ -27,7 +62,7 @@ def to_string(x: Value):
         raise Exception(f"to-string not implemented for type {x.type.value}")
 
 
-# (repr)
+@builtin("repr")
 def represent(x: Value):
     if x.type in (int_type, symbol_type, cell_type):
         return to_string(x)
@@ -37,7 +72,7 @@ def represent(x: Value):
         raise Exception(f"repr not implemented for type {x.type.value}")
 
 
-# (inspect)
+@builtin("inspect")
 def inspect(x: Value):
     string = represent(x)
     if x.start_position is not None:
@@ -45,3 +80,13 @@ def inspect(x: Value):
     return string
 
 
+@builtin("quote", exec_mode=function.no_eval)
+def quote(x: Value):
+    return x
+
+
+# quasiquote
+# if
+# define
+# lambda
+# and or
