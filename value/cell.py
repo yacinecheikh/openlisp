@@ -26,3 +26,9 @@ def reverse(cell):
         result = cons(expr, result)
     return result
 
+
+def make_list(*args):
+    result = nil
+    for x in args:
+        result = cons(x, result)
+    return reverse(result)

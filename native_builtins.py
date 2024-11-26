@@ -39,8 +39,9 @@ def represent(x: Value):
 
 # (inspect)
 def inspect(x: Value):
-    string = to_string(x)
+    string = represent(x)
     if x.start_position is not None:
         string.value += f" at {x.start_line}:{x.start_position}-{x.end_line}:{x.end_position}"
     return string
+
 
