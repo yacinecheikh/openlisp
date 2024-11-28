@@ -1,16 +1,6 @@
 from value import hashtable, unique, symbol, cell, keyword, function
-from native_builtins import represent, global_environment
+from native_builtins import represent, global_environment, environment
 from value.types import *
-
-
-def environment(parent=unique.nil):
-    bindings = {
-        "parent-scope": parent,
-    }
-    lisp_value = hashtable.hashtable(bindings)
-    bindings["current-scope"] = lisp_value
-    return lisp_value
-
 
 
 def lookup(env, symbol):
@@ -22,18 +12,6 @@ def lookup(env, symbol):
         parent_scope = bindings["parent-scope"]
         return lookup(parent_scope, symbol)
     return None
-
-
-"""
-from value import integer, string
-env = environment()
-env.value["a"] = integer.integer(5)
-env.value["x"] = string.string("hi")
-
-print(represent(lookup(env, symbol.symbol("a"))).value)
-print(represent(lookup(env, symbol.symbol("x"))).value)
-print(lookup(env, symbol.symbol("y")))
-"""
 
 
 #def compute_native(
@@ -58,16 +36,39 @@ def compute(env, func, args):
         args = cell.map_list(args, lambda arg: evaluate(env, arg))
 
     if func_value.type is native_function_type:
-        result = func_value.value(*args)
+        result = func_value.value(args)
     # TODO: function environment (closure + args)
     elif func_value.type is lisp_function_type:
-        pass
+        arglist = cell.car(func_value.value)
+        body = cell.car(cell.cdr(func_value.value))
+        closure_env = cell.car(cell.car(cell.cdr(func_value.value)))
+
+
+        # local environment definition
+        local_env = environment(closure_env)
+        # parameters
+        argvals = args
+        while arglist is not cell.nil:
+            argname = cell.car(arglist)
+            argval = cell.nil
+            if argvals is not cell.nil:
+                argval = cell.car(argvals)
+                argvals = cell.cdr(argvals)
+            arglist = cell.cdr(arglist)
+
+            local_env.value[argname.value] = argval
+
+
+        # form evaluation
+        result = cell.nil
+        while body is not cell.nil:
+            expr = cell.car(body)
+            body = cell.cdr(body)
+
+            result = evaluate(local_env, expr)
+
     else:
         raise ValueError("Invalid function value; should not happen")
-    argnames = cell.car(func_value)
-    ### TODO: compute form or call
-    # result
-    result = nil
 
 
     if keyword.equal(exec_mode, function.before_eval):
@@ -93,24 +94,18 @@ def evaluate(env, expr):
     if expr.type is symbol_type:
         return lookup(env, expr)
     elif expr.type is cell_type:
-        raise NotImplementedError
+        head = cell.car(expr)
+        args = cell.cdr(expr)
+        func = evaluate(head)
+
+        assert func.type is function_type
+
+        return compute(env, func, args)
     else:
         return expr
 
 
 # TODO: test evaluate for complex expressions (funcall, lists)
-"""
-from value import integer, string
-env = environment()
-env.value["a"] = integer.integer(5)
-env.value["x"] = string.string("hi")
-
-
-for expr in [symbol.symbol("a"), integer.integer(5), string.string("test")]:
-    result = evaluate(env, expr)
-    string = represent(result)
-    print(string.value)
-"""
 
 
 

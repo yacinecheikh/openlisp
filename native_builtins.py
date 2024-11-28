@@ -21,8 +21,15 @@ global_environment = environment()
 
 def define_global(name, func, exec_mode=function.after_eval):
     bindings = global_environment.value
-    wrapped_func = function.native_function(func, exec_mode)
-    bindings["name"] = wrapped_func
+    # convert lisp cells to *args
+    def f(arglist):
+        args = []
+        while arglist is not nil:
+            args.append(car(arglist))
+            arglist = cdr(arglist)
+        return func(*args)
+    wrapped_func = function.native_function(f, exec_mode)
+    bindings[name] = wrapped_func
     return func
 
 
@@ -68,6 +75,23 @@ def represent(x: Value):
         return to_string(x)
     if x.type == str_type:
         return Value(str_type, f'"{x.value}"')
+    if x.type == hashtable_type:
+        h = {}
+        for key, val in x.value.items():
+            if key == "current-scope" and val is x:
+                continue
+            h[key] = represent(val).value
+        return Value(str_type, str(h))
+    if x.type == unique_type:
+        return Value(type=str_type, value=x.value)
+    if x.type == function_type:
+        exec_mode = car(x.value)
+        func_val = cdr(x.value)
+        return Value(str_type, f"<{exec_mode.value}> " + represent(func_val).value)
+    if x.type == native_function_type:
+        return Value(str_type, str(x.value))
+    #if x.type == type_type:
+    #    return 
     else:
         raise Exception(f"repr not implemented for type {x.type.value}")
 
