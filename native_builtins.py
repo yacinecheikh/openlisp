@@ -1,28 +1,19 @@
 from value.value import Value
 from value.types import *
-from value.unique import nil
+from value.unique import nil, true, false
 from value.cell import car, cdr
+from value.environment import environment, global_environment
+from value import function
 
 
-from value import hashtable, unique, function
+from interpreter import evaluate
 
-
-def environment(parent=unique.nil):
-    bindings = {
-        "parent-scope": parent,
-    }
-    lisp_value = hashtable.hashtable(bindings)
-    bindings["current-scope"] = lisp_value
-    return lisp_value
-
-
-global_environment = environment()
 
 
 def define_global(name, func, exec_mode=function.after_eval):
     bindings = global_environment.value
     # convert lisp cells to *args
-    def f(arglist):
+    def f(env, arglist):
         args = []
         while arglist is not nil:
             args.append(car(arglist))
@@ -32,14 +23,37 @@ def define_global(name, func, exec_mode=function.after_eval):
     bindings[name] = wrapped_func
     return func
 
+# define special global
+def define_special(name, func):
+    bindings = global_environment.value
+    # convert lisp cells to *args
+    def f(env, arglist):
+        args = []
+        while arglist is not nil:
+            args.append(car(arglist))
+            arglist = cdr(arglist)
+        return func(env, *args)
+    wrapped_func = function.native_function(f, exec_mode=function.no_eval)
+    bindings[name] = wrapped_func
+    return func
+
 
 def builtin(name, exec_mode=function.after_eval):
     def decorator(func):
         return define_global(name, func, exec_mode)
     return decorator
 
+def special_builtin(name):
+    def decorator(func):
+        return define_special(name, func)
+    return decorator
+
 
 #define_global("to-string", to_string)
+
+global_environment.value["true"] = true
+global_environment.value["false"] = false
+global_environment.value["nil"] = nil
 
 
 #@builtin("+")
@@ -109,8 +123,19 @@ def quote(x: Value):
     return x
 
 
+@special_builtin("define")
+def define(env, symbol, expr):
+    assert symbol.type is symbol_type
+    value = evaluate(env, expr)
+    global_environment.value[symbol.value] = value
+    return nil
+
+
+@special_builtin("lambda")
+def lambda_constructor(env, arglist, *body_forms):
+    raise NotImplementedError
+
 # quasiquote
 # if
-# define
 # lambda
 # and or

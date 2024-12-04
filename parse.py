@@ -177,20 +177,6 @@ def read_expr(tokens: List[Token]):
     else:
         raise Exception("Unknown token type")
 
-
-
-from native_builtins import to_string, represent, inspect
-
-with open("source/read.lisp") as f:
-    chars = source_map(f.read())
-    tokens = tokenize(chars)
-    print(tokens)
-    tokens.reverse()
-    while tokens:
-        expr = read_expr(tokens)
-        print(inspect(expr).value)
-
-
 # tokenizer
 #def tokenize(source: str) -> list:
     # (eq x y)

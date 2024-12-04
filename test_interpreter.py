@@ -67,7 +67,31 @@ def test_compute_native():
 
 # TODO: define "define"
 def test_compute_lisp():
-    pass
+    from parse import source_map, tokenize, read_expr
+    from native_builtins import represent
+    with open("source/test/2-define.lisp") as f:
+        source = f.read()
+    chars = source_map(source)
+    tokens = tokenize(chars)
+
+    # read and evaluate one expression at a time
+    tokens.reverse()
+    simple_define_expr = read_expr(tokens)
+    lambda_define_expr = read_expr(tokens)
+    assert not tokens
+    assert represent(simple_define_expr).value == "(define x 5)"
+    assert represent(lambda_define_expr).value == "(define f (lambda (x) nil))"
+
+    from native_builtins import global_environment
+    from interpreter import evaluate
+    result = evaluate(global_environment, simple_define_expr)
+
+    print(represent(global_environment).value)
+
+    # TODO
+
+    assert False
+
 
 def test_compute_macro():
     pass

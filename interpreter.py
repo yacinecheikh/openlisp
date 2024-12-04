@@ -1,5 +1,5 @@
 from value import hashtable, unique, symbol, cell, keyword, function
-from native_builtins import represent, global_environment, environment
+from value.environment import environment
 from value.types import *
 
 
@@ -36,7 +36,7 @@ def compute(env, func, args):
         args = cell.map_list(args, lambda arg: evaluate(env, arg))
 
     if func_value.type is native_function_type:
-        result = func_value.value(args)
+        result = func_value.value(env, args)
     # TODO: function environment (closure + args)
     elif func_value.type is lisp_function_type:
         arglist = cell.car(func_value.value)
@@ -96,7 +96,7 @@ def evaluate(env, expr):
     elif expr.type is cell_type:
         head = cell.car(expr)
         args = cell.cdr(expr)
-        func = evaluate(head)
+        func = evaluate(env, head)
 
         assert func.type is function_type
 
