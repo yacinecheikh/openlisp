@@ -1,7 +1,7 @@
 from value.value import Value
 from value.types import *
 from value.unique import nil, true, false
-from value.cell import car, cdr
+from value.cell import car, cdr, make_list
 from value.environment import environment, global_environment
 from value import function
 
@@ -106,6 +106,12 @@ def represent(x: Value):
         return Value(str_type, str(x.value))
     #if x.type == type_type:
     #    return 
+    elif x.type == lisp_function_type:
+        arglist = car(x.value)
+        arglist_repr = represent(arglist).value
+        body = car(cdr(x.value))
+        body_repr = represent(body).value[1:-1]
+        return Value(str_type, f"(lambda {arglist_repr} {body_repr})")
     else:
         raise Exception(f"repr not implemented for type {x.type.value}")
 
@@ -133,9 +139,14 @@ def define(env, symbol, expr):
 
 @special_builtin("lambda")
 def lambda_constructor(env, arglist, *body_forms):
-    raise NotImplementedError
+    body = make_list(*body_forms)
+    lisp_function = function.lisp_function(arglist, body, env, function.after_eval)
+    return lisp_function
+
+
 
 # quasiquote
 # if
-# lambda
 # and or
+# gensym
+

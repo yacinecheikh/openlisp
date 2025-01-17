@@ -65,7 +65,6 @@ def test_compute_native():
     assert result.value == '"test"'
 
 
-# TODO: define "define"
 def test_compute_lisp():
     from parse import source_map, tokenize, read_expr
     from native_builtins import represent
@@ -80,16 +79,58 @@ def test_compute_lisp():
     lambda_define_expr = read_expr(tokens)
     assert not tokens
     assert represent(simple_define_expr).value == "(define x 5)"
-    assert represent(lambda_define_expr).value == "(define f (lambda (x) nil))"
+    assert represent(lambda_define_expr).value == "(define f (lambda (x) 5))"
 
+    # evaluate the defines
     from native_builtins import global_environment
     from interpreter import evaluate
     result = evaluate(global_environment, simple_define_expr)
 
-    print(represent(global_environment).value)
+    #print(represent(global_environment).value)
 
-    # TODO
+    result = evaluate(global_environment, lambda_define_expr)
+    #print(represent(global_environment).value)
 
+    # compute the lambda
+    from interpreter import lookup, compute
+    from value import symbol, cell, integer
+    from value.types import int_type
+    f = lookup(global_environment, symbol.symbol("f"))
+    args = cell.cons(integer.integer(2), cell.nil)
+    # manual compute call
+    result = compute(global_environment, f, args)
+    #print(represent(result).value)
+    assert result.type == int_type
+    assert result.value == 5
+
+
+def test_eval_funcall():
+    from value.types import int_type
+    from native_builtins import global_environment, represent
+    from interpreter import evaluate
+    from parse import source_map, tokenize, read_expr
+
+    source = "(f 2)"
+
+    # parse
+    chars = source_map(source)
+    tokens = tokenize(chars)
+    tokens.reverse()
+    call_expr = read_expr(tokens)
+    
+    # safety checks
+    assert not tokens
+    assert represent(call_expr).value == "(f 2)"
+
+    # do the eval
+    result = evaluate(global_environment, call_expr)
+
+    assert result.type == int_type
+    assert result.value == 5
+
+
+# TODO: run the expressions in source/test/3-compute.lisp
+def test_all_computes():
     assert False
 
 
@@ -97,10 +138,6 @@ def test_compute_macro():
     pass
 
 def test_compute_special():
-    pass
-
-
-def test_eval_funcall():
     pass
 
 
