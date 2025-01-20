@@ -95,7 +95,15 @@ def represent(x: Value):
             if key == "current-scope" and val is x:
                 continue
             h[key] = represent(val).value
-        return Value(str_type, str(h))
+
+        """
+        symbol: value
+        """
+        result = ""
+        for key, val in h.items():
+            result += f"{key}: {val}\n"
+        return Value(str_type, result)
+        #return Value(str_type, str(h))
     if x.type == unique_type:
         return Value(type=str_type, value=x.value)
     if x.type == function_type:

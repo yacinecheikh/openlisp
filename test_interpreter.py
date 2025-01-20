@@ -131,8 +131,63 @@ def test_eval_funcall():
 
 # TODO: run the expressions in source/test/3-compute.lisp
 def test_all_computes():
-    assert False
+    from parse import source_map, tokenize, read_expr, parse_expr
+    from native_builtins import global_environment, represent
+    from interpreter import evaluate
+    with open("source/test/3-compute.lisp") as f:
+        source = f.read()
+    chars = source_map(source)
+    tokens = tokenize(chars)
+    tokens.reverse()
 
+
+    # (define f (lambda (x) x))
+    expr = read_expr(tokens)
+    assert represent(expr).value == "(define f (lambda (x) x))"
+
+    result = evaluate(global_environment, expr)
+
+    # print(represent(global_environment).value)
+
+    code = "(f 4)"
+    parsed = parse_expr(code)
+    # assert represent(parsed).value == "(f 4)"
+    result = evaluate(global_environment, parsed)
+
+    from value.types import int_type
+    assert result.type == int_type
+    assert result.value == 4
+
+
+    #print(represent(global_environment).value)
+
+    # (define f (lambda (x) nil))
+    expr = read_expr(tokens)
+    assert represent(expr).value == "(define f (lambda (x) nil))"
+    evaluate(global_environment, expr)
+
+
+    # TODO: inspect the f function
+    # inspect the closure environment
+    # improve the environment debugging
+    #   (print recursively)
+    #   (print-environment)
+
+    # TODO:
+    # add a constructor for hashtables (environments)
+    # add new functions for (set-exec-mode)
+
+    # TODO: solve the compute scoping logic
+
+    #code = parse_expr("(f 1)")
+    #result = evaluate(global_environment, code)
+
+    #print(represent(result).value)
+
+
+
+
+    assert False
 
 def test_compute_macro():
     pass

@@ -6,9 +6,13 @@ from value.types import *
 def lookup(env, symbol):
     name = symbol.value
     bindings = env.value
+    #print(name)
+    #print(bindings)
     if name in bindings:
         return bindings[name]
     if bindings["parent-scope"] is not unique.nil:
+        #print(name)
+        #print(type(name))
         parent_scope = bindings["parent-scope"]
         return lookup(parent_scope, symbol)
     return None
@@ -42,10 +46,16 @@ def compute(env, func, args):
         arglist = cell.car(func_value.value)
         body = cell.car(cell.cdr(func_value.value))
         closure_env = cell.car(cell.car(cell.cdr(func_value.value)))
+        #print("closure:")
+        #print(type(closure_env.value))
+        #print(closure_env.value)
 
 
         # local environment definition
         local_env = environment(closure_env)
+        #print("local:")
+        #print(type(local_env.value))
+        #print(local_env.value)
         # parameters
         argvals = args
         while arglist is not cell.nil:

@@ -183,3 +183,13 @@ def read_expr(tokens: List[Token]):
     # "(", "eq", "x", "y", ")"
 
 
+
+def parse_expr(source):
+    chars = source_map(source)
+    tokens = tokenize(chars)
+    tokens.reverse()
+
+    expr = read_expr(tokens)
+    assert not tokens
+    return expr
+
