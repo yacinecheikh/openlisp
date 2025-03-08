@@ -47,7 +47,7 @@ def next_token(source: str, i: int) -> (int, Token):
             elif ch in ("(", ")", " ", "\n"):
                 number = "".join([ch for ch in buffer])
                 token = Token("number", number)
-                return i + 1, token
+                return i, token
             else:
                 raise Exception(f"Invalid number at {repr(ch)}")
 
@@ -56,7 +56,7 @@ def next_token(source: str, i: int) -> (int, Token):
                 # finish the symbol parsing
                 symbol = "".join([ch for ch in buffer])
                 token = Token("symbol", symbol)
-                return i + 1, token
+                return i, token
             else:
                 buffer.append(ch)
 
@@ -74,6 +74,7 @@ def next_token(source: str, i: int) -> (int, Token):
         i += 1
     # no token left
     if state == "default":
+        assert i == len(source)
         return i, None
     # TODO: handle end of token at eof with None character
     raise NotImplementedError
@@ -116,7 +117,7 @@ def next_expr(source: str, i: int) -> (int, Value):
                 result = reverse(sub_exprs)
                 return next_i, result
             else:
-                i, expr = read_expr(source, i)
+                i, expr = next_expr(source, i)
                 sub_exprs = cons(expr, sub_exprs)
     else:
         raise Exception("Unknown token type")

@@ -25,7 +25,12 @@ def test_tokenizer():
     assert tokens[2] == Token("number", "52334")
     assert tokens[3] == Token("string", "test")
     assert tokens[4] == Token("symbol", "var")
-    assert len(tokens) == 5
+    assert tokens[5] == Token("syntax", "(")
+    assert tokens[6] == Token("number", "1")
+    assert tokens[7] == Token("number", "2")
+    assert tokens[8] == Token("number", "3")
+    assert tokens[9] == Token("syntax", ")")
+    assert len(tokens) == 10
 
 
 
@@ -33,9 +38,10 @@ def test_read():
     from native_builtins import to_string, represent#, inspect
     from parse import read_all_expressions
     exprs = read_all_expressions("source/test/1-read.lisp")
-    assert len(exprs) == 4
+    assert len(exprs) == 5
     assert represent(exprs[0]).value == "nil"
     assert represent(exprs[1]).value == "52334"
     assert represent(exprs[2]).value == "\"test\""
     assert represent(exprs[3]).value == "var"
+    assert represent(exprs[4]).value == "(1 2 3)"
 
