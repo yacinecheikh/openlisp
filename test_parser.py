@@ -29,20 +29,10 @@ def test_tokenizer():
 
 
 
-def read_all_expressions(path):
-    from parse import next_expr
-    with open(path) as f:
-        source = f.read()
-        i = 0
-        while True:
-            i, expr = next_expr(source, i)
-            if expr is None:
-                break
-            yield expr
-
 def test_read():
     from native_builtins import to_string, represent#, inspect
-    exprs = list(read_all_expressions("source/test/1-read.lisp"))
+    from parse import read_all_expressions
+    exprs = read_all_expressions("source/test/1-read.lisp")
     assert len(exprs) == 4
     assert represent(exprs[0]).value == "nil"
     assert represent(exprs[1]).value == "52334"

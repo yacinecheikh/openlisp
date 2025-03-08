@@ -122,3 +122,17 @@ def next_expr(source: str, i: int) -> (int, Value):
         raise Exception("Unknown token type")
 
 
+# wrapper for sequential evaluation during tests
+def read_all_expressions(path):
+    expressions = []
+    from parse import next_expr
+    with open(path) as f:
+        source = f.read()
+        i = 0
+        while True:
+            i, expr = next_expr(source, i)
+            if expr is None:
+                break
+            expressions.append(expr)
+    return expressions
+
