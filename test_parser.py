@@ -37,7 +37,7 @@ def test_tokenizer():
 def test_read():
     from native_builtins import to_string, represent#, inspect
     from parse import read_all_expressions
-    exprs = read_all_expressions("source/test/1-read.lisp")
+    exprs = read_all_expressions(open("source/test/1-read.lisp").read())
     assert len(exprs) == 5
     assert represent(exprs[0]).value == "nil"
     assert represent(exprs[1]).value == "52334"

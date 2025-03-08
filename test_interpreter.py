@@ -69,7 +69,7 @@ def test_compute_lisp():
     from parse import read_all_expressions
     from native_builtins import represent
 
-    expressions = read_all_expressions("source/test/2-define.lisp")
+    expressions = read_all_expressions(open("source/test/2-define.lisp").read())
     assert len(expressions) == 2
     simple_define_expr, lambda_define_expr = expressions
 
@@ -103,18 +103,14 @@ def test_eval_funcall():
     from value.types import int_type
     from native_builtins import global_environment, represent
     from interpreter import evaluate
-    from parse import source_map, tokenize, read_expr
+    from parse import read_all_expressions
 
     source = "(f 2)"
 
-    # parse
-    chars = source_map(source)
-    tokens = tokenize(chars)
-    tokens.reverse()
-    call_expr = read_expr(tokens)
-    
+    expressions = read_all_expressions(source)
+    assert len(expressions) == 1
+    call_expr = expressions[0]
     # safety checks
-    assert not tokens
     assert represent(call_expr).value == "(f 2)"
 
     # do the eval
