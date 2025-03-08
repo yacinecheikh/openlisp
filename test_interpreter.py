@@ -66,18 +66,13 @@ def test_compute_native():
 
 
 def test_compute_lisp():
-    from parse import source_map, tokenize, read_expr
+    from parse import read_all_expressions
     from native_builtins import represent
-    with open("source/test/2-define.lisp") as f:
-        source = f.read()
-    chars = source_map(source)
-    tokens = tokenize(chars)
 
-    # read and evaluate one expression at a time
-    tokens.reverse()
-    simple_define_expr = read_expr(tokens)
-    lambda_define_expr = read_expr(tokens)
-    assert not tokens
+    expressions = read_all_expressions("source/test/2-define.lisp")
+    assert len(expressions) == 2
+    simple_define_expr, lambda_define_expr = expressions
+
     assert represent(simple_define_expr).value == "(define x 5)"
     assert represent(lambda_define_expr).value == "(define f (lambda (x) 5))"
 
