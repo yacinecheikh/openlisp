@@ -122,18 +122,17 @@ def test_eval_funcall():
 
 # TODO: run the expressions in source/test/3-compute.lisp
 def test_all_computes():
-    from parse import source_map, tokenize, read_expr, parse_expr
+    #from parse import source_map, tokenize, read_expr, parse_expr
+    from parse import read_all_expressions, next_expr
     from native_builtins import global_environment, represent
     from interpreter import evaluate
     with open("source/test/3-compute.lisp") as f:
         source = f.read()
-    chars = source_map(source)
-    tokens = tokenize(chars)
-    tokens.reverse()
-
 
     # (define f (lambda (x) x))
-    expr = read_expr(tokens)
+    expressions = read_all_expressions(source)
+    assert len(expressions) == 5
+    expr = expressions[0]
     assert represent(expr).value == "(define f (lambda (x) x))"
 
     result = evaluate(global_environment, expr)
@@ -141,9 +140,9 @@ def test_all_computes():
     # print(represent(global_environment).value)
 
     code = "(f 4)"
-    parsed = parse_expr(code)
-    # assert represent(parsed).value == "(f 4)"
-    result = evaluate(global_environment, parsed)
+    parsed, expr = next_expr(code, 0) #parse_expr(code)
+    assert represent(expr).value == "(f 4)"
+    result = evaluate(global_environment, expr)
 
     from value.types import int_type
     assert result.type == int_type
@@ -153,7 +152,7 @@ def test_all_computes():
     #print(represent(global_environment).value)
 
     # (define f (lambda (x) nil))
-    expr = read_expr(tokens)
+    expr = expressions[1]
     assert represent(expr).value == "(define f (lambda (x) nil))"
     evaluate(global_environment, expr)
 
