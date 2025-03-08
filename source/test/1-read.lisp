@@ -1,13 +1,5 @@
-
-
-6403840
-
-112
-
-"sirte"
-
-variable
-
-(print "hello world")
-
+()
+52334
+"test"
+var
 
