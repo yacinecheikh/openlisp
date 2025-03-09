@@ -76,7 +76,13 @@ def next_token(source: str, i: int) -> (int, Token):
     if state == "default":
         assert i == len(source)
         return i, None
-    # TODO: handle end of token at eof with None character
+    # EOF: finish reading current token
+    if state == "number":
+        return i, Token("number", "".join(buffer))
+    if state == "symbol":
+        return i, Token("symbol", "".join(buffer))
+    if state == "string":
+        raise ValueError("Incomplete string literal")
     raise NotImplementedError
 
 
