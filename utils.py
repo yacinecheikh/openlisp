@@ -71,9 +71,13 @@ def represent(x: Value):
         assert x.value.type is cell_type
         exec_mode = car(x.value)
         func_val = cdr(x.value)
-        return string(f"<{exec_mode.value}> " + represent(func_val).value)
+        func_val_repr = represent(func_val).value
+        result = f"(function :{exec_mode.value} {func_val_repr})"
+        #return string(f"<{exec_mode.value}> " + represent(func_val).value)
+        return string(result)
     if x.type == native_function_type:
-        return string(str(x.value))
+        python_function = x.value
+        return string(f"<native function {python_function.__name__}>")
     #if x.type == type_type:
     #    return 
     elif x.type == lisp_function_type:

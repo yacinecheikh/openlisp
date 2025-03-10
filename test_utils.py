@@ -1,3 +1,10 @@
+"""
+test printing utilities (repr and to-string)
+
+creates and manipulate lisp values to inspect them, but does not execute lisp code
+"""
+
+
 from utils import represent, to_string
 
 # datatype constructors
@@ -22,6 +29,20 @@ env = environment()
 env.value["x"] = integer(5)
 env2 = environment(env)
 
+# native function
+def print_string(x):
+    print(x.value)
+native_func = native_function(print_string, exec_mode=after_eval)
+
+# lisp function
+# (lambda (y) x) defined with x as a closure, tagged as a normal function (:after-eval)
+arglist = make_list(symbol("y"))
+body = make_list(symbol("x"))
+lisp_func = lisp_function(arglist, body, env2, exec_mode=after_eval)
+
+
+
+
 values = [
     integer(5),
     string("test"),
@@ -33,8 +54,8 @@ values = [
     hashtable({"a": integer(3)}),
     env2,
 
-    # TODO: create native function
-    # TODO: lisp function
+    native_func,
+    lisp_func,
 ]
 
 repred = [
@@ -48,7 +69,9 @@ repred = [
 (dict
       :parent-scope (dict
                           :parent-scope nil
-                          :x 5))"""
+                          :x 5))""",
+    "(function :after-eval <native function print_string>)",
+    "(function :after-eval (lambda (y) x))"
 ]
 
 
