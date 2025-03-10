@@ -38,7 +38,7 @@ native_func = native_function(print_string, exec_mode=after_eval)
 # (lambda (y) x) defined with x as a closure, tagged as a normal function (:after-eval)
 arglist = make_list(symbol("y"))
 body = make_list(symbol("x"))
-lisp_func = lisp_function(arglist, body, env2, exec_mode=after_eval)
+lisp_func = lisp_function(arglist, body, env2, exec_mode=before_eval)
 
 
 
@@ -70,8 +70,8 @@ repred = [
       :parent-scope (dict
                           :parent-scope nil
                           :x 5))""",
-    "(function :after-eval <native function print_string>)",
-    "(function :after-eval (lambda (y) x))"
+    "<native function print_string>",
+    "(function :before-eval (lambda (y) x))"
 ]
 
 
