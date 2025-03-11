@@ -19,7 +19,10 @@ from value.environment import environment, global_environment
 from value.hashtable import hashtable
 from value.function import (
     native_function, lisp_function,
-    after_eval, no_eval, before_eval
+    after_eval, no_eval, before_eval,
+
+    get_exec_mode, with_exec_mode,
+    get_arglist, get_body, get_closure
 )
 
 from value import types
@@ -56,6 +59,14 @@ values = [
 
     native_func,
     lisp_func,
+
+    # test function manipulation utilities
+    get_exec_mode(native_func),
+    with_exec_mode(native_func, no_eval),
+    get_arglist(lisp_func),
+    get_body(lisp_func),
+    get_closure(lisp_func),
+
 ]
 
 repred = [
@@ -70,8 +81,20 @@ repred = [
       :parent-scope (dict
                           :parent-scope nil
                           :x 5))""",
+
     "<native function print_string>",
-    "(function :before-eval (lambda (y) x))"
+    "(function :before-eval (lambda (y) x))",
+
+
+    ":after-eval",
+    "(function :no-eval <native function print_string>)",
+    "(y)",
+    "(x)",
+    """\
+(dict
+      :parent-scope (dict
+                          :parent-scope nil
+                          :x 5))"""
 ]
 
 
