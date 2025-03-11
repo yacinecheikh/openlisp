@@ -1,14 +1,36 @@
 from value import hashtable, unique, symbol, cell, keyword, function
 from value.environment import environment
 from value.types import *
+from value.function import (
+    get_exec_mode,
+    get_arglist,
+    get_body,
+    get_closure,
+)
+
+from utils import printval
+
+# print each step of code execution
+debug = True
 
 
 def lookup(env, symbol):
     name = symbol.value
     bindings = env.value
+    if debug:
+        print("lookup:")
+        printval(symbol)
+        print("environment:")
+        printval(env)
+        if bindings["parent-scope"] is unique.nil:
+            print("(no parent scope found)")
+        else:
+            print("(parent scope found)")
     #print(name)
     #print(bindings)
     if name in bindings:
+        if debug:
+            print("found!")
         return bindings[name]
     if bindings["parent-scope"] is not unique.nil:
         #print(name)
@@ -40,12 +62,16 @@ def compute(env, func, args):
         args = cell.map_list(args, lambda arg: evaluate(env, arg))
 
     if func_value.type is native_function_type:
+        print("===================python function")
         result = func_value.value(env, args)
     # TODO: function environment (closure + args)
     elif func_value.type is lisp_function_type:
+        print("===================lisp function")
         arglist = cell.car(func_value.value)
         body = cell.car(cell.cdr(func_value.value))
         closure_env = cell.car(cell.car(cell.cdr(func_value.value)))
+        print("closure env bindings:", closure_env.value)
+        print("closure env type?:", closure_env.type.value)
         #print("closure:")
         #print(type(closure_env.value))
         #print(closure_env.value)

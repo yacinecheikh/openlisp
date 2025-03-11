@@ -12,7 +12,10 @@ from value.types import *
 from value.symbol import symbol
 from value.string import string
 from value.integer import integer
+
+from value.cell import cons
 from value.environment import environment, bind
+from value.unique import true, false, nil
 
 
 def check_value(lisp_value, lisp_type, python_value):
@@ -87,39 +90,66 @@ def test_compute_native():
     check_value(result, expected.type, expected.value)
 
 
+def test_eval_define():
+    pass
+
+
 def test_compute_lisp():
+    "compute a lisp-defined function call"
     from parse import read_all_expressions
     from native_builtins import represent
 
+    # no need for incremental (read) here, read all expressions at once
     expressions = read_all_expressions(open("source/test/2-define.lisp").read())
     assert len(expressions) == 2
-    simple_define_expr, lambda_define_expr = expressions
+    define_expr, lambda_define_expr = expressions
 
-    assert represent(simple_define_expr).value == "(define x 5)"
+    # safety check that the reader did its job
+    assert represent(define_expr).value == "(define x 5)"
     assert represent(lambda_define_expr).value == "(define f (lambda (x) 5))"
 
-    # evaluate the defines
+    # test (define) first
     from native_builtins import global_environment
-    from interpreter import evaluate
-    result = evaluate(global_environment, simple_define_expr)
+    from interpreter import evaluate, lookup
 
-    #print(represent(global_environment).value)
+    result = evaluate(global_environment, define_expr)
+    # (define) returns nil
+    assert result is nil
+
+    # lookup returns the correct value
+    check_value(
+            lookup(global_environment, symbol("x")),
+            int_type, 5
+    )
 
     result = evaluate(global_environment, lambda_define_expr)
-    #print(represent(global_environment).value)
+    assert result is nil
 
     # compute the lambda
-    from interpreter import lookup, compute
-    from value import symbol, cell, integer
-    from value.types import int_type
-    f = lookup(global_environment, symbol.symbol("f"))
-    args = cell.cons(integer.integer(2), cell.nil)
-    # manual compute call
+    from interpreter import compute
+    f = lookup(global_environment, symbol("f"))
+    # check the function definition
+    assert f.type == function_type
+    assert represent(f).value == "(lambda (x) 5)"
+
+
+    # manually compute the function call from the global scope
+    args = cons(integer(2), nil)
     result = compute(global_environment, f, args)
-    #print(represent(result).value)
     check_value(result, int_type, 5)
-    #assert result.type == int_type
-    #assert result.value == 5
+
+
+def test_eval_lambda_calculus():
+    "evaluate a lambda call"
+    # ((lambda (x) x) 1) == 1
+    from parse import next_expr
+    from utils import represent
+    from interpreter import evaluate
+    from native_builtins import global_environment
+    parsed, expr = next_expr("((lambda (x) x) 1)", 0)
+    assert represent(expr).value == "((lambda (x) x) 1)"
+    result = evaluate(global_environment, expr)
+    check_value(result, int_type, 1)
 
 
 def test_eval_funcall():
