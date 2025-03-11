@@ -153,16 +153,21 @@ def test_eval_lambda_calculus():
 
 
 def test_eval_funcall():
-    from value.types import int_type
-    from native_builtins import global_environment, represent
+    "evaluate a function call"
+    from native_builtins import global_environment
+    from utils import represent
     from interpreter import evaluate
     from parse import read_all_expressions
 
+    # define something
+    define = "(define f (lambda (x) 5))"
+    define_expr = read_all_expressions(define)[0]
+    #assert represent(define_expr).value == define
+    evaluate(global_environment, define_expr)
+
     source = "(f 2)"
 
-    expressions = read_all_expressions(source)
-    assert len(expressions) == 1
-    call_expr = expressions[0]
+    call_expr = read_all_expressions(source)[0]
     # safety checks
     assert represent(call_expr).value == "(f 2)"
 
@@ -170,11 +175,8 @@ def test_eval_funcall():
     result = evaluate(global_environment, call_expr)
 
     check_value(result, int_type, 5)
-    #assert result.type == int_type
-    #assert result.value == 5
 
 
-# TODO: run the expressions in source/test/3-compute.lisp
 def test_all_computes():
     from parse import read_all_expressions, next_expr
     from native_builtins import global_environment, represent
@@ -238,7 +240,7 @@ def test_all_computes():
     print("=========================")
     print("=========================")
 
-    assert False
+    #assert False
 
     # call
     code = "(f 4)"
@@ -276,10 +278,10 @@ def test_all_computes():
 
     assert False
 
-def test_compute_macro():
+def test_macro():
     pass
 
-def test_compute_special():
+def test_special():
     pass
 
 

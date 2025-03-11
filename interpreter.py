@@ -1,8 +1,10 @@
 from value import hashtable, unique, symbol, cell, keyword, function
-from value.environment import environment
+from value.environment import environment, bind
 from value.types import *
 from value.function import (
     get_exec_mode,
+    get_raw_function,
+
     get_arglist,
     get_body,
     get_closure,
@@ -45,43 +47,53 @@ def lookup(env, symbol):
 
 #def lisp_function(arglist, body, env, exec_mode=after_eval):
 
-def compute(env, func, args):
+def compute(call_env, func, args):
     """
+    Compute a function call ran in the current scope
+
     (f a b c)
+    where f can be a python function or (arglist body closure_environment)
     f = list(arglist, body, func_env)
-    local_env = {(func_env)}
-    for arg in args:
-        local_env[arglist[0]] = a
 
-    for expr in body:
+    to compute a lisp function:
+    -create a local environment {parent=closure_environment a=arg1 b=arg2 c=arg3}
+    -for expression in body:
+        -evaluate expression in the local environment
+    -return the last computed value (nil by default)
+
+    in addition:
+    if f is a function (:after-eval): evaluate arguments before computing the function call
+    if f is a macro (:before-eval): evaluate the result of the function
+    if f is special (:no-eval): do nothing (evaluation is done manually)
+
     """
-    exec_mode = cell.car(func.value)
-    func_value = cell.cdr(func.value)
-    # if function
+    exec_mode = get_exec_mode(func)
+    raw_function = get_raw_function(func)
+    # if function: evaluate parameters
+    # (resolve variables to their values,...)
     if keyword.equal(exec_mode, function.after_eval):
-        args = cell.map_list(args, lambda arg: evaluate(env, arg))
+        args = cell.map_list(args, lambda arg: evaluate(call_env, arg))
 
-    if func_value.type is native_function_type:
-        print("===================python function")
-        result = func_value.value(env, args)
-    # TODO: function environment (closure + args)
-    elif func_value.type is lisp_function_type:
-        print("===================lisp function")
-        arglist = cell.car(func_value.value)
-        body = cell.car(cell.cdr(func_value.value))
-        closure_env = cell.car(cell.car(cell.cdr(func_value.value)))
-        print("closure env bindings:", closure_env.value)
-        print("closure env type?:", closure_env.type.value)
-        #print("closure:")
-        #print(type(closure_env.value))
-        #print(closure_env.value)
-
+    if raw_function.type is native_function_type:
+        if debug:
+            print("===================computing python function")
+        # python functions get raw access to the current call environment
+        result = raw_function.value(call_env, args)
+    elif raw_function.type is lisp_function_type:
+        if debug:
+            print("===================computing lisp function")
+        arglist = get_arglist(func)
+        body = get_body(func)
+        closure_env = get_closure(func)
+        if debug:
+            print("closure env:")
+            printval(closure_env)
+            print("??? closure env type?:")
+            printval(closure_env.type)
+        assert closure_env.type is hashtable_type
 
         # local environment definition
         local_env = environment(closure_env)
-        #print("local:")
-        #print(type(local_env.value))
-        #print(local_env.value)
         # parameters
         argvals = args
         while arglist is not cell.nil:
@@ -92,7 +104,12 @@ def compute(env, func, args):
                 argvals = cell.cdr(argvals)
             arglist = cell.cdr(arglist)
 
-            local_env.value[argname.value] = argval
+            bind(local_env, argname, argval)
+
+
+        if debug:
+            print("local environment:")
+            printval(local_env)
 
 
         # form evaluation
@@ -107,8 +124,9 @@ def compute(env, func, args):
         raise ValueError("Invalid function value; should not happen")
 
 
+    # if macro: evaluate the return value in the call scope
     if keyword.equal(exec_mode, function.before_eval):
-        result = evaluate(env, result)
+        result = evaluate(call_env, result)
     return result
 
 

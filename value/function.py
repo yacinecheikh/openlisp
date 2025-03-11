@@ -27,24 +27,31 @@ def get_exec_mode(func):
     assert func.type == function_type
     return car(func.value)
 
+# returns a Value(native_function_type, <python function>)
+# or a Value(lisp_function_type, (arglist body env))
+# internally used by the interpreter, but never by the lisp runtime
+# (use get_arglist/get_body/get_closure to manipulate functions at runtime)
+def get_raw_function(func):
+    return cdr(func.value)
+
 
 def get_arglist(lisp_func):
     assert lisp_func.type == function_type
-    func_data = cdr(lisp_func.value)
+    func_data = get_raw_function(lisp_func)
     assert func_data.type == lisp_function_type
     arglist = car(func_data.value)
     return arglist
 
 def get_body(lisp_func):
     assert lisp_func.type == function_type
-    func_data = cdr(lisp_func.value)
+    func_data = get_raw_function(lisp_func)
     assert func_data.type == lisp_function_type
     body = car(cdr(func_data.value))
     return body
 
 def get_closure(lisp_func):
     assert lisp_func.type == function_type
-    func_data = cdr(lisp_func.value)
+    func_data = get_raw_function(lisp_func)
     assert func_data.type == lisp_function_type
     env = car(cdr(cdr(func_data.value)))
     return env
