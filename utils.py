@@ -97,3 +97,8 @@ def represent(x: Value):
     else:
         raise Exception(f"repr not implemented for type {x.type.value}")
 
+
+# used too often not to shorten
+def printval(x: Value):
+    print(represent(x).value)
+
