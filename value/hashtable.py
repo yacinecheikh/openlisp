@@ -10,3 +10,9 @@ def setkey(table: Value, string: Value, value: Value):
 
     table.value[string.value] = value
 
+def getkey(table: Value, string: Value):
+    assert table.type == hashtable_type
+    assert string.type == str_type
+
+    return table.value[string.value]
+
