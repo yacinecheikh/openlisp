@@ -33,6 +33,7 @@ def lookup(env, symbol):
     if name in bindings:
         if debug:
             print("found!")
+            printval(bindings[name])
         return bindings[name]
     if bindings["parent-scope"] is not unique.nil:
         #print(name)
@@ -42,10 +43,6 @@ def lookup(env, symbol):
     return None
 
 
-#def compute_native(
-
-
-#def lisp_function(arglist, body, env, exec_mode=after_eval):
 
 def compute(call_env, func, args):
     """
@@ -83,13 +80,16 @@ def compute(call_env, func, args):
         if debug:
             print("===================computing lisp function")
         arglist = get_arglist(func)
+        if debug:
+            print("params:")
+            printval(arglist)
+            print("args:")
+            printval(args)
         body = get_body(func)
         closure_env = get_closure(func)
         if debug:
             print("closure env:")
             printval(closure_env)
-            print("??? closure env type?:")
-            printval(closure_env.type)
         assert closure_env.type is hashtable_type
 
         # local environment definition
@@ -160,23 +160,4 @@ def evaluate(env, expr):
 
 
 # TODO: test evaluate for complex expressions (funcall, lists)
-
-
-
-
-
-
-##### lexical binding example
-"""
-(defun g ()
-        (let ((counter 0))
-          (lambda (x)
-            (setf counter (+ counter x))
-             counter)))
-
-
-(defvar increment-counter (g))
-(increment-counter 5)
-"""
-
 

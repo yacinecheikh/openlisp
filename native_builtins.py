@@ -9,7 +9,9 @@ from value import function
 
 from interpreter import evaluate
 
-from utils import represent, to_string
+from utils import represent, to_string, printval
+
+from interpreter import debug
 
 
 
@@ -76,10 +78,12 @@ def quote(x: Value):
 
 @special_builtin("define")
 def define(env, symbol, expr):
-    print("current (define) env:")
-    print(represent(env).value)
-    print("define expr:")
-    print(represent(expr).value)
+    if debug:
+        print("(define):")
+        print("call env:")
+        printval(env)
+        print("define expr:")
+        printval(expr)
     assert symbol.type is symbol_type
     value = evaluate(env, expr)
     global_environment.value[symbol.value] = value
@@ -88,11 +92,16 @@ def define(env, symbol, expr):
 
 @special_builtin("lambda")
 def lambda_constructor(env, arglist, *body_forms):
-    print("lambda env:")
-    print(represent(env).value)
-    print("lambda arg list:")
-    print(represent(arglist).value)
+    if debug:
+        print("(lambda):")
+        print("call/closure env:")
+        printval(env)
+        print("lambda arg list:")
+        printval(arglist)
     body = make_list(*body_forms)
+    if debug:
+        print("lambda body:")
+        printval(body)
     lisp_function = function.lisp_function(arglist, body, env, function.after_eval)
     return lisp_function
 

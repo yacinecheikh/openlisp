@@ -85,7 +85,10 @@ def represent(x: Value):
     #    return 
     elif x.type == lisp_function_type:
         arglist = car(x.value)
-        arglist_repr = represent(arglist).value
+        if arglist is nil:
+            arglist_repr = "()"
+        else:
+            arglist_repr = represent(arglist).value
         body = car(cdr(x.value))
         body_repr = represent(body).value[1:-1]
         return string(f"(lambda {arglist_repr} {body_repr})")

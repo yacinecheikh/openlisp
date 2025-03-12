@@ -177,106 +177,129 @@ def test_eval_funcall():
     check_value(result, int_type, 5)
 
 
-def test_all_computes():
-    from parse import read_all_expressions, next_expr
-    from native_builtins import global_environment, represent
-    from interpreter import evaluate
-    with open("source/test/3-compute.lisp") as f:
-        source = f.read()
+# load the code for the tests below
+from parse import read_all_expressions
+with open("source/test/3-compute.lisp") as f:
+    source = f.read()
+expressions = read_all_expressions(source)
 
-    expressions = read_all_expressions(source)
+
+def test_compute_semantics_0():
     assert len(expressions) == 5
+
+def test_compute_semantics_1():
+    "Run diverse scenarios to test runtime execution behavior"
+
+    from native_builtins import global_environment
+    from interpreter import evaluate, lookup
+    from utils import represent
 
     expr = expressions[0]
     assert represent(expr).value == "(define f (lambda (x) x))"
 
+    # define
     result = evaluate(global_environment, expr)
+    #assert result is nil
 
-    # print(represent(global_environment).value)
-
-    code = "(f 4)"
-    parsed, expr = next_expr(code, 0)
+    # call
+    expr = read_all_expressions("(f 4)")[0]
     assert represent(expr).value == "(f 4)"
     result = evaluate(global_environment, expr)
-
-    from value.types import int_type
     check_value(result, int_type, 4)
-    #assert result.type == int_type
-    #assert result.value == 4
-    #print(represent(global_environment).value)
 
+def test_compute_semantics_2():
+    "Run diverse scenarios to test runtime execution behavior"
+
+    from native_builtins import global_environment
+    from interpreter import evaluate, lookup
+    from utils import printval, represent
 
     # define
+    #print("===define")
     expr = expressions[1]
     assert represent(expr).value == "(define f (lambda (x) nil))"
     result = evaluate(global_environment, expr)
 
     # inspect
-    code = "f"
-    parsed, expr = next_expr(code, 0)
-    func = evaluate(global_environment, expr)
-    print(represent(func).value)  # <after-eval> (lambda (x) nil)
-    print(represent(func.type).value)  # <type function>
-    func_data = func.value
-    print(represent(func_data.type).value)  # <type cell>
-    # TODO: represent func_data (currently raises false assertion)
-
-    #print(func_data.value)  # (Value, Value)
-    from value import cell
-    exec_mode = cell.car(func_data)
-    print(represent(exec_mode).value)
-    lisp_func = cell.cdr(func_data)
-    print(represent(lisp_func.type).value)  # <type lisp-function>
-    print(represent(lisp_func).value)  # (lambda (x) nil)
-    arglist = cell.car(lisp_func.value)
-    body_forms = cell.car(cell.cdr(lisp_func.value))
-    closure_env = cell.car(cell.cdr(cell.cdr(lisp_func.value)))
-    print(represent(arglist).value)  # (x)
-    print(represent(body_forms).value)  # (nil)
-    print(represent(closure_env).value)  # 
-    #print(represent(func_data).value)
-
-    print("=========================")
-    print("=========================")
-    print("=========================")
-
-    #assert False
+    #print("===inspect")
+    #func_expr = read_all_expressions("f")[0]
+    #func = evaluate(global_environment, func_expr)
+    #printval(func)
 
     # call
-    code = "(f 4)"
-    parsed, expr = next_expr(code, 0)
-    assert represent(expr).value == "(f 4)"
-    print("global env:")
-    print(represent(global_environment).value)
-    result = evaluate(global_environment, expr)
-    from value.types import unique_type
-    print(represent(result).value)
-    #check_value(result, unique_type, "nil")
-    #assert result.type == unique_type
-    #assert result.value == "nil"
+    #print("===call")
+    call_expr = read_all_expressions("(f 3)")[0]
+    result = evaluate(global_environment, call_expr)
+    #printval(result)
+    assert result is nil
+
+def test_compute_semantics_3():
+    "Run diverse scenarios to test runtime execution behavior"
+
+    from native_builtins import global_environment
+    from interpreter import evaluate, lookup
+    from utils import printval, represent
+
+    expr = expressions[2]
+    evaluate(global_environment, expr)
+    assert represent(lookup(global_environment, symbol("f"))).value == "(lambda () 2)"
+
+    call = read_all_expressions("(f)")[0]
+    check_value(
+        evaluate(global_environment, call),
+        int_type, 2
+    )
 
 
-    # TODO: inspect the f function
-    # inspect the closure environment
-    # improve the environment debugging
-    #   (print recursively)
-    #   (print-environment)
+def test_compute_semantics_4():
+    "Run diverse scenarios to test runtime execution behavior"
 
-    # TODO:
-    # add a constructor for hashtables (environments)
-    # add new functions for (set-exec-mode)
+    from native_builtins import global_environment
+    from interpreter import evaluate, lookup
+    from utils import printval, represent
 
-    # TODO: solve the compute scoping logic
+    expr = expressions[3]
+    assert represent(expr).value == "(define f (lambda (x y) y))"
+    evaluate(global_environment, expr)
 
-    #code = parse_expr("(f 1)")
-    #result = evaluate(global_environment, code)
-
-    #print(represent(result).value)
-
-
+    call = read_all_expressions("(f 2 3)")[0]
+    check_value(
+        evaluate(global_environment, call),
+        int_type, 3
+    )
 
 
-    assert False
+def test_compute_semantics_5():
+    "Run diverse scenarios to test runtime execution behavior"
+
+    from native_builtins import global_environment
+    from interpreter import evaluate, lookup
+    from utils import printval, represent
+
+    from interpreter import compute
+
+    # remove x and f from the environment
+    del global_environment.value["x"]
+    del global_environment.value["f"]
+
+    expr = expressions[4]
+    assert represent(expr).value == "(define f (lambda (x) (lambda nil x)))"
+    evaluate(global_environment, expr)
+
+    # call the first function and manually compute the second call
+    call = read_all_expressions("(f 5)")[0]
+    #printval(call1)
+    lambda_result = evaluate(global_environment, call)
+    #printval(result)
+    # manually call the function
+    result = compute(global_environment, lambda_result, args=nil)
+    check_value(result, int_type, 5)
+
+    # call both functions in a single expression
+    call = read_all_expressions("((f 7))")[0]
+    result = evaluate(global_environment, call)
+    check_value(result, int_type, 7)
+
 
 def test_macro():
     pass
