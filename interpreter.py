@@ -10,7 +10,7 @@ from value.function import (
     get_closure,
 )
 
-from utils import printval
+from utils import printval, represent
 
 # print each step of code execution
 debug = True
@@ -73,12 +73,12 @@ def compute(call_env, func, args):
 
     if raw_function.type is native_function_type:
         if debug:
-            print("===================computing python function")
+            print("===================computing python function:", represent(func).value)
         # python functions get raw access to the current call environment
         result = raw_function.value(call_env, args)
     elif raw_function.type is lisp_function_type:
         if debug:
-            print("===================computing lisp function")
+            print("===================computing lisp function:", represent(func).value)
         arglist = get_arglist(func)
         if debug:
             print("params:")
@@ -146,7 +146,10 @@ def evaluate(env, expr):
     (a b (c)) -> expand; (evaluate parameters?); compute; (evaluate the result?)
     """
     if expr.type is symbol_type:
-        return lookup(env, expr)
+        result = lookup(env, expr)
+        if result is None:
+            raise ValueError(f"Symbol '{expr.value} is undefined")
+        return result
     elif expr.type is cell_type:
         head = cell.car(expr)
         args = cell.cdr(expr)
