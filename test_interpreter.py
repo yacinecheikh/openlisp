@@ -418,13 +418,27 @@ def test_metaprogramming_5():
 
 
 def test_metaprogramming_6():
-    "call a macro inside a repeated code block"
+    "expand a macro inside a loop"
 
     expr = meta_expressions[5]
-    printval(expr)
-    #result = evaluate(global_environment, expr)
+    assert represent(expr).value == "(for (i (range 10)) (my-macro) 5)"
 
-    #assert False
+    import interpreter
+    interpreter.debug = False
+
+    with capturing() as output:
+        expanded = expand(global_environment, expr)
+    assert str(output) == "['macro expansion']"
+    assert represent(expanded).value == '(for (i (range 10)) (print "generated code") 5)'
+
+
+    with capturing() as output:
+        result = evaluate(global_environment, expanded)
+    expected = ["generated code"] * 10
+    assert str(output) == str(expected)
+    check_value(result, int_type, 5)
+
+    interpreter.debug = True
 
 
 

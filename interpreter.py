@@ -162,7 +162,7 @@ def expand(env, expr):
             printval(head)
         f = lookup(env, head)
         # if f is a known (defined) macro
-        if f.type is function_type and keyword.equal(get_exec_mode(f), function.before_eval):
+        if f is not None and f.type is function_type and keyword.equal(get_exec_mode(f), function.before_eval):
             if debug:
                 print("found a macro expression!")
             expanded = compute(env, f, args, eval_mode=False)
@@ -209,6 +209,4 @@ def evaluate(env, expr):
     else:
         return expr
 
-
-# TODO: test evaluate for complex expressions (funcall, lists)
 

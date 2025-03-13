@@ -1,14 +1,15 @@
 from value.value import Value
 from value.types import *
 from value.unique import nil, true, false
-from value.cell import car, cdr, make_list
+from value.cell import car, cdr, make_list, cons
 from value.symbol import symbol
 from value.keyword import keyword
+from value.integer import integer
 from value.environment import environment, global_environment, bind
 from value import function
 
 
-from interpreter import evaluate
+from interpreter import evaluate, compute
 
 from utils import represent, to_string, printval
 
@@ -117,9 +118,75 @@ def lambda_constructor(env, arglist, *body_forms):
     return lisp_function
 
 @special_builtin("for")
-def for_loop(env, loop_params, *body_forms):
+def for_loop(for_env, loop_params, *body_forms):
     if interpreter.debug:
-        print("(for):")
+        print("(for): ", end="")
+        printval(loop_params)
+        for form in body_forms:
+            print("    ", end="")
+            printval(form)
+        printval(for_env)
+    it = car(loop_params)
+    iterator_form = car(cdr(loop_params))
+    assert it.type == symbol_type
+
+    # the iterator must be evaluated first
+    if interpreter.debug:
+        print("evaluating the iterator form")
+        printval(iterator_form)
+    iterator = evaluate(for_env, iterator_form)
+    if interpreter.debug:
+        print("(for) received iterator: ", end="")
+        printval(iterator)
+    assert iterator.type == function_type
+
+    # return the last evaluated expression
+    for_result = nil
+    # call the iterator until it stops producing values
+    while True:
+        result = compute(for_env, iterator, nil, eval_mode=False)
+        if result is nil:
+            break
+        # TODO: add error handling if the iterator does not produce properly encoded values
+        assert result.type == cell_type
+        # evaluate the body
+        for expr in body_forms:
+            for_result = evaluate(for_env, expr)
+    return for_result
+
+
+@builtin("range")
+def range_iterator(*args):
+    "build a lisp iterator"
+    if interpreter.debug:
+        print("(range):")
+        print(*(represent(arg).value for arg in args))
+
+    for arg in args:
+        assert arg.type == int_type
+    range_args = []
+    for arg in args:
+        range_args.append(arg.value)
+
+    if interpreter.debug:
+        print("range values:", list(range(*range_args)))
+    generator = iter(range(*range_args))
+
+    def range_lisp_iterator(env, arglist):
+        #if interpreter.debug:
+        #    print("(range iterator):")
+        try:
+            # values are wrapped in a cell
+            value = integer(next(generator))
+            return cons(value, nil)
+        except StopIteration as e:
+            # lisp iterators return nil when there is no value left
+            return nil
+    iterator_function = function.native_function(range_lisp_iterator, function.after_eval)
+    if interpreter.debug:
+        print("created iterator: ", end="")
+        printval(iterator_function)
+    return iterator_function
 
 
 @builtin("kw")
