@@ -32,7 +32,7 @@ def lookup(env, symbol):
     #print(bindings)
     if name in bindings:
         if debug:
-            print("found!")
+            print("found! value: ", end="")
             printval(bindings[name])
         return bindings[name]
     if bindings["parent-scope"] is not unique.nil:
@@ -44,7 +44,8 @@ def lookup(env, symbol):
 
 
 
-def compute(call_env, func, args):
+# TODO: genocide every eval_mode=True useage
+def compute(call_env, func, args, eval_mode=True):
     """
     Compute a function call ran in the current scope
 
@@ -68,8 +69,9 @@ def compute(call_env, func, args):
     raw_function = get_raw_function(func)
     # if function: evaluate parameters
     # (resolve variables to their values,...)
-    if keyword.equal(exec_mode, function.after_eval):
-        args = cell.map_list(args, lambda arg: evaluate(call_env, arg))
+    if eval_mode:
+        if keyword.equal(exec_mode, function.after_eval):
+            args = cell.map_list(args, lambda arg: evaluate(call_env, arg))
 
     if raw_function.type is native_function_type:
         if debug:
@@ -125,18 +127,54 @@ def compute(call_env, func, args):
 
 
     # if macro: evaluate the return value in the call scope
-    if keyword.equal(exec_mode, function.before_eval):
-        result = evaluate(call_env, result)
+    if eval_mode:
+        if keyword.equal(exec_mode, function.before_eval):
+            result = evaluate(call_env, result)
     return result
 
 
 
 def expand(env, expr):
     """
-    (defmacro g ...)
+    if g is a defined macro: (defmacro g ...)
+    then:
     (f (g (h 5)))
+    (g (h 5)) gets expanded
     """
-    pass
+
+    if debug:
+        print("expanding: ", end="")
+        printval(expr)
+
+    # do not process cases other than (<symbol> ...)
+    if expr.type is not cell_type:
+        if debug:
+            print("nothing to expand")
+        return expr
+    head = cell.car(expr)
+    args = cell.cdr(expr)
+    # try to expand the current (head . tail) form
+    # if ok -> recursion
+    # else -> expand sub-expressions
+    if head.type is symbol_type:
+        if debug:
+            print("looking up the head of the list: ", end="")
+            printval(head)
+        f = lookup(env, head)
+        # if f is a known (defined) macro
+        if f.type is function_type and keyword.equal(get_exec_mode(f), function.before_eval):
+            if debug:
+                print("found a macro expression!")
+            expanded = compute(env, f, args, eval_mode=False)
+            # keep expanding
+            return expand(env, expanded)
+    # did not expand the head (not a (macro ...) form)
+    # -> expand sub-expressions
+    if debug:
+        print("could not find an expandable macro expression; expanding sub-expressions")
+    expanded = cell.map_list(expr, lambda elt: expand(env, elt))
+    return expanded
+
 
 
 def evaluate(env, expr):
@@ -156,8 +194,18 @@ def evaluate(env, expr):
         func = evaluate(env, head)
 
         assert func.type is function_type
+        # function ? -> evaluate arguments
+        # macro ? -> error
+        # special ? do not evaluate
+        exec_mode = get_exec_mode(func)
+        if keyword.equal(exec_mode, function.after_eval):
+            # function -> evaluate arguments
+            args = cell.map_list(args, lambda arg: evaluate(env, arg))
 
-        return compute(env, func, args)
+        # macros should not be called at runtime
+        assert not keyword.equal(exec_mode, function.before_eval)
+
+        return compute(env, func, args, eval_mode=False)
     else:
         return expr
 

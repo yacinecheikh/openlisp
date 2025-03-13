@@ -38,6 +38,8 @@ def to_string(x: Value):
 def represent(x: Value):
     if x.type in (int_type, symbol_type, cell_type):
         return to_string(x)
+    elif x.type == keyword_type:
+        return string(f":{x.value}")
     if x.type == str_type:
         return string(f'"{x.value}"')
     if x.type == hashtable_type:
@@ -95,8 +97,6 @@ def represent(x: Value):
 
     elif x.type == type_type:
         return string(f"<type {x.value}>")
-    elif x.type == keyword_type:
-        return string(f":{x.value}")
     else:
         raise Exception(f"repr not implemented for type {x.type.value}")
 

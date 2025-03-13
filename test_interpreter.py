@@ -3,8 +3,26 @@ WARNING:
 tests are sequential
 (if one test fails, assume every tests after this one fail too)
 (each test assumes the previous one to work and relies on that assumption)
-
 """
+
+
+# stdout capturing context manager:
+
+from io import StringIO 
+import sys
+
+class capturing(list):
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._stringio = StringIO()
+        return self
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio    # free up some memory
+        sys.stdout = self._stdout
+
+
+
 
 
 # *_type
@@ -177,6 +195,11 @@ def test_eval_funcall():
     check_value(result, int_type, 5)
 
 
+"""
+Run diverse scenarios to test runtime execution behavior
+"""
+
+
 # load the code for the tests below
 from parse import read_all_expressions
 with open("source/test/3-compute.lisp") as f:
@@ -188,7 +211,6 @@ def test_compute_semantics_0():
     assert len(expressions) == 5
 
 def test_compute_semantics_1():
-    "Run diverse scenarios to test runtime execution behavior"
 
     from native_builtins import global_environment
     from interpreter import evaluate, lookup
@@ -208,7 +230,6 @@ def test_compute_semantics_1():
     check_value(result, int_type, 4)
 
 def test_compute_semantics_2():
-    "Run diverse scenarios to test runtime execution behavior"
 
     from native_builtins import global_environment
     from interpreter import evaluate, lookup
@@ -234,7 +255,6 @@ def test_compute_semantics_2():
     assert result is nil
 
 def test_compute_semantics_3():
-    "Run diverse scenarios to test runtime execution behavior"
 
     from native_builtins import global_environment
     from interpreter import evaluate, lookup
@@ -252,7 +272,6 @@ def test_compute_semantics_3():
 
 
 def test_compute_semantics_4():
-    "Run diverse scenarios to test runtime execution behavior"
 
     from native_builtins import global_environment
     from interpreter import evaluate, lookup
@@ -270,7 +289,6 @@ def test_compute_semantics_4():
 
 
 def test_compute_semantics_5():
-    "Run diverse scenarios to test runtime execution behavior"
 
     from native_builtins import global_environment
     from interpreter import evaluate, lookup
@@ -301,13 +319,112 @@ def test_compute_semantics_5():
     check_value(result, int_type, 7)
 
 
-def test_macro():
-    pass
-
-def test_special():
-    pass
+"""
+macros, specials and ahead-of-time macro expansion
+"""
 
 
-def test_macroexpand():
-    pass
+with open("source/test/4-macro.lisp") as f:
+    source = f.read()
+
+# read all expressions at once because the reader is not modified
+meta_expressions = read_all_expressions(source)
+
+# read expressions one by one (to follow the correct execution flow)
+#from parse import next_expr
+#position = 0
+#while True:
+#    position, expression = next_expr(source, position)
+#    if expression is None:
+#        break
+
+from utils import printval, represent
+from interpreter import evaluate, expand, lookup
+from native_builtins import global_environment
+
+def test_metaprogramming_1():
+    "test keywords"
+    assert len(expressions) == 5
+
+    expr = meta_expressions[0]
+
+    printval(expr)
+    assert represent(expr).value == '(define no-eval (kw "no-eval"))'
+    evaluate(global_environment, expr)
+    result = lookup(global_environment, symbol("no-eval"))
+    check_value(result, keyword_type, "no-eval")
+
+def test_metaprogramming_2():
+    "define a special"
+    expr = meta_expressions[1]
+
+    printval(expr)
+    evaluate(global_environment, expr)
+    result = lookup(global_environment, symbol("my-quote"))
+    assert represent(result).value == "(function :no-eval (lambda (x) x))"
+
+
+def test_metaprogramming_3():
+    "run a special function with unevaluated arguments"
+    expr = meta_expressions[2]
+
+    printval(expr)
+    result = evaluate(global_environment, expr)
+    check_value(result, symbol_type, "x")
+
+def test_metaprogramming_4():
+    "define a macro with compile-time print and code generation"
+    expr = meta_expressions[3]
+
+    printval(expr)
+    evaluate(global_environment, expr)
+    result = lookup(global_environment, symbol("my-macro"))
+    assert represent(result).value == '(function :before-eval (lambda () (print "macro expansion") (my-quote (print "generated code"))))'
+
+# TODO: expand the macro before evaluating its result
+
+# test expand
+
+def test_metaprogramming_5():
+    "test (expand)"
+
+    import interpreter
+    interpreter.debug = False
+
+    expr = read_all_expressions("(print 5)")[0]
+    #printval(expr)
+    with capturing() as output:
+        expanded = expand(global_environment, expr)
+    assert represent(expanded).value == represent(expr).value
+    # nothing printed
+    assert str(output) == "[]"
+
+    expr = meta_expressions[4]
+    assert represent(expr).value == "(my-macro)"
+
+    with capturing() as output:
+        expanded = expand(global_environment, expr)
+    assert represent(expanded).value == '(print "generated code")'
+    # expanding the macro prints a message while generating code
+    assert str(output) == "['macro expansion']"
+
+    with capturing() as output:
+        result = evaluate(global_environment, expanded)
+    # executing the expanded code prints another message
+    assert str(output) == "['generated code']"
+
+    interpreter.debug = True
+
+
+
+def test_metaprogramming_6():
+    "call a macro inside a repeated code block"
+
+    expr = meta_expressions[5]
+    printval(expr)
+    #result = evaluate(global_environment, expr)
+
+    #assert False
+
+
 
