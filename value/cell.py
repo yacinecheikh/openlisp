@@ -34,11 +34,10 @@ def make_list(*args):
     return reverse(result)
 
 def map_list(cell, f):
-    reversed = reverse(cell)
     result = nil
-    while reversed is not nil:
-        head = car(reversed)
+    while cell is not nil:
+        head = car(cell)
         result = cons(f(head), result)
-        reversed = cdr(reversed)
-    return result
+        cell = cdr(cell)
+    return reverse(result)
 
