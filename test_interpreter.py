@@ -421,7 +421,7 @@ def test_metaprogramming_6():
     "expand a macro inside a loop"
 
     expr = meta_expressions[5]
-    assert represent(expr).value == "(for (i (range 10)) (my-macro) 5)"
+    assert represent(expr).value == "(for (i (range 10)) (my-macro) i)"
 
     import interpreter
     interpreter.debug = False
@@ -429,14 +429,15 @@ def test_metaprogramming_6():
     with capturing() as output:
         expanded = expand(global_environment, expr)
     assert str(output) == "['macro expansion']"
-    assert represent(expanded).value == '(for (i (range 10)) (print "generated code") 5)'
+    assert represent(expanded).value == '(for (i (range 10)) (print "generated code") i)'
 
 
     with capturing() as output:
         result = evaluate(global_environment, expanded)
     expected = ["generated code"] * 10
     assert str(output) == str(expected)
-    check_value(result, int_type, 5)
+    printval(result)
+    check_value(result, int_type, 9)
 
     interpreter.debug = True
 

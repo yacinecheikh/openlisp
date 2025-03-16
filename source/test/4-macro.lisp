@@ -16,4 +16,4 @@
 
 (for (i (range 10))
         (my-macro)
-        5)
+        i)

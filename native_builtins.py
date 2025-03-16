@@ -144,14 +144,20 @@ def for_loop(for_env, loop_params, *body_forms):
     for_result = nil
     # call the iterator until it stops producing values
     while True:
+        # create a lexical scope for the current iteration
+        iteration_env = environment(for_env)
+
+        # evaluate the iterator and define
         result = compute(for_env, iterator, nil, eval_mode=False)
         if result is nil:
             break
         # TODO: add error handling if the iterator does not produce properly encoded values
         assert result.type == cell_type
+        bind(iteration_env, it, car(result))
+
         # evaluate the body
         for expr in body_forms:
-            for_result = evaluate(for_env, expr)
+            for_result = evaluate(iteration_env, expr)
     return for_result
 
 
