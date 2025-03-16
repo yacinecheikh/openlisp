@@ -5,7 +5,6 @@ uses a tokenizer
 """
 
 
-
 class Token:
     def __init__(self, type: str, value: str):
         self.type = type
@@ -17,6 +16,7 @@ class Token:
     # used in unit tests
     def __eq__(self, other):
         return self.type == other.type and self.value == other.value
+
 
 # state machine
 def next_token(source: str, i: int) -> (int, Token):
@@ -101,7 +101,6 @@ def next_expr(source: str, i: int) -> (int, Value):
     if token is None:
         return i, None
     i = next_i
-
 
     if token.type == "symbol":
         s = symbol(token.value)

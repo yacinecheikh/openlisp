@@ -9,8 +9,9 @@ from value.function import (
     get_body,
     get_closure,
 )
-
+# used for debugging
 from utils import printval, represent
+
 
 # print each step of code execution
 debug = True
@@ -41,7 +42,6 @@ def lookup(env, symbol):
         parent_scope = bindings["parent-scope"]
         return lookup(parent_scope, symbol)
     return None
-
 
 
 def compute(call_env, func, args):
@@ -102,7 +102,6 @@ def compute(call_env, func, args):
 
             bind(local_env, argname, argval)
 
-
         if debug:
             print("local environment:")
             printval(local_env)
@@ -120,7 +119,6 @@ def compute(call_env, func, args):
         raise ValueError("Invalid function value; should not happen")
 
     return result
-
 
 
 def expand(env, expr):
@@ -165,7 +163,6 @@ def expand(env, expr):
     return expanded
 
 
-
 def evaluate(env, expr):
     """
     5 "test" -> return
@@ -197,5 +194,4 @@ def evaluate(env, expr):
         return compute(env, func, args)
     else:
         return expr
-
 
