@@ -3,21 +3,15 @@
 ## Interpreter
 
 As of v0.1, the (Python) interpreter is based on a stack of layers:
-- Runtime
-- Printing utilities
-- Reader
-- Interpreter
-- Builtins
+- Runtime: `value/*.py`, 223 LoC
+- Printing utilities: `utils.py`, 107 LoC
+- Reader: `parse.py`, 142 LoC
+- Interpreter: `interpreter.py`, 212 LoC
+- Builtins: `native_builtins.py`, 212 LoC
+
+The total source code is 896 LoC.
 
 Each of these layers is covered by unit tests, because the behavior of an interpreter is much harder to debug as it grows in complexity.
-
-The total source code is only 896 LoC:
-- `value/*.py` (runtime): 223 LoC
-- `parse.py` (reader): 142 LoC
-- `utils.py` (pretty print, used for debugging): 107 LoC
-- `interpreter.py` (the full interpreter): 212 LoC
-- `native_builtins.py` (the lisp builtins): 212 LoC
-
 
 
 ### Runtime
@@ -38,8 +32,6 @@ The type of a Lisp value is itself also a Value at runtime (with the type of typ
 This type system is taken from Python, where every value is an instance of a class, and `type` is the metaclass of all types.
 
 The encoding of a Lisp value depends on its type. For example, Lisp strings and integers are simply encoded as Python strings and integers. Symbols and keywords are both represented by Python strings. More complex datatypes, like Lisp functions, are encoded as other Lisp values, like linked lists.
-
-The exact encoding of Lisp types is not important, since the Openlisp interpreter is intended to be cross-compiled to many different languages, with different implementations depending on the target languages.
 
 
 One peculiarity of Openlisp is a dedicated `unique`datatype for unique and distinct values, like `nil`, `true` and `false`.
@@ -149,7 +141,7 @@ The `(kw)` builtin is a constructor for keywords:
 (print (repr (kw "before-eval")))
 -> :before-eval
 ```
-There is currently no builtin syntax for keywords, although `(repr)` represents them with a prefix `:`. This is done in order to minimize the complexity of the parser until a more scalable alternative to the tokenizer state machine is found.
+There is currently no builtin syntax for keywords, although `(repr)` represents them with a prefix `:`. This is done in order to minimize the complexity of the parser, and especially the tokenizer state machine.
 
 
 #### Function constructor
