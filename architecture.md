@@ -2,14 +2,14 @@
 
 ## Interpreter
 
-As of v0.1, the (Python) interpreter is based on a stack of layers:
+As of v0.2, the (Python) interpreter is based on a stack of layers:
 - Runtime: `value/*.py`, 223 LoC
 - Printing utilities: `utils.py`, 107 LoC
-- Reader: `parse.py`, 142 LoC
-- Interpreter: `interpreter.py`, 212 LoC
-- Builtins: `native_builtins.py`, 212 LoC
+- Reader: `parse.py`, 141 LoC
+- Interpreter: `interpreter.py`, 197 LoC
+- Builtins: `native_builtins.py`, 208 LoC
 
-The total source code is 896 LoC.
+The total source code is 876 LoC.
 
 Each of these layers is covered by unit tests, because the behavior of an interpreter is much harder to debug as it grows in complexity.
 
@@ -162,4 +162,5 @@ Some builtins are planned but have not been implemented yet:
 - `(if)`
 - `(and)`, `(or)`, `(<)`, `(<=)`, `(>)`, `(>=)`, `(==)`
 - `(set)`
+- `(+)`, `(-)`,...
 
