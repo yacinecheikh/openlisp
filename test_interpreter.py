@@ -98,11 +98,16 @@ def test_compute_native():
     expected = represent(value)
 
     env = environment()
-    bind(env, symbol("x"), value)
     symb = symbol("x")
-    args = cons(symb, nil)
+
+    bind(env, symb, value)
 
     func = lookup(global_environment, symbol("repr"))
+
+    #args = cons(symb, nil)
+    # manually evaluate arguments (not done by (compute))
+    arg1 = evaluate(env, symb)
+    args = cons(arg1, nil)
 
     result = compute(env, func, args)
     check_value(result, expected.type, expected.value)

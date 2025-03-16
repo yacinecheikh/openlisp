@@ -44,8 +44,7 @@ def lookup(env, symbol):
 
 
 
-# TODO: genocide every eval_mode=True useage
-def compute(call_env, func, args, eval_mode=True):
+def compute(call_env, func, args):
     """
     Compute a function call ran in the current scope
 
@@ -67,11 +66,6 @@ def compute(call_env, func, args, eval_mode=True):
     """
     exec_mode = get_exec_mode(func)
     raw_function = get_raw_function(func)
-    # if function: evaluate parameters
-    # (resolve variables to their values,...)
-    if eval_mode:
-        if keyword.equal(exec_mode, function.after_eval):
-            args = cell.map_list(args, lambda arg: evaluate(call_env, arg))
 
     if raw_function.type is native_function_type:
         if debug:
@@ -125,11 +119,6 @@ def compute(call_env, func, args, eval_mode=True):
     else:
         raise ValueError("Invalid function value; should not happen")
 
-
-    # if macro: evaluate the return value in the call scope
-    if eval_mode:
-        if keyword.equal(exec_mode, function.before_eval):
-            result = evaluate(call_env, result)
     return result
 
 
@@ -165,7 +154,7 @@ def expand(env, expr):
         if f is not None and f.type is function_type and keyword.equal(get_exec_mode(f), function.before_eval):
             if debug:
                 print("found a macro expression!")
-            expanded = compute(env, f, args, eval_mode=False)
+            expanded = compute(env, f, args)
             # keep expanding
             return expand(env, expanded)
     # did not expand the head (not a (macro ...) form)
@@ -205,7 +194,7 @@ def evaluate(env, expr):
         # macros should not be called at runtime
         assert not keyword.equal(exec_mode, function.before_eval)
 
-        return compute(env, func, args, eval_mode=False)
+        return compute(env, func, args)
     else:
         return expr
 

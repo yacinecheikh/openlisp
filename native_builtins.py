@@ -148,7 +148,7 @@ def for_loop(for_env, loop_params, *body_forms):
         iteration_env = environment(for_env)
 
         # evaluate the iterator and define
-        result = compute(for_env, iterator, nil, eval_mode=False)
+        result = compute(for_env, iterator, nil)
         if result is nil:
             break
         # TODO: add error handling if the iterator does not produce properly encoded values
