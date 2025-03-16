@@ -9,6 +9,6 @@ Interpreter implementation:
 - [x] test coverage
 
 Missing features:
-- [ ] implement missing builtins
+- [ ] implement missing builtins (detailed in [architecture.md](./architecture.md))
 - [ ] implement unnamed symbols for (gensym)
 
